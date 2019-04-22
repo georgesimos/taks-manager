@@ -41,6 +41,37 @@ app.get('/users/:id', async (req, res) => {
     }
 })
 
+app.patch('/users/:id', async (req, res) => {
+    const _id = req.params.id
+
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['name', 'email', 'password', 'age']
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+
+    if (!isValidOperation) return res.status(400).send({ error: 'Invalid updates!' })
+
+    try {
+        const user = await User.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
+        if (!user) return res.sendStatus(404)
+        res.send(user)
+    } catch (e) {
+        res.status(400).send(e)
+    }
+})
+
+app.delete('/users/:id', async (req, res) => {
+    const _id = req.params.id
+
+    try {
+        const user = await User.findByIdAndDelete(_id)
+        if (!user) return res.sendStatus(404)
+
+        res.send(user)
+    } catch (e) {
+        res.sendStatus(400)
+    }
+})
+
 app.post('/tasks', async (req, res) => {
     const task = new Task(req.body)
 
@@ -70,6 +101,37 @@ app.get('/tasks/:id', async (req, res) => {
         if (!task) {
             return res.send(404).send()
         }
+        res.send(task)
+    } catch (e) {
+        res.sendStatus(400)
+    }
+})
+
+app.patch('/tasks/:id', async (req, res) => {
+    const _id = req.params.id
+
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['title', 'description', 'completed']
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+
+    if (!isValidOperation) return res.status(400).send({ error: 'Invalid updates!' })
+
+    try {
+        const task = await Task.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
+        if (!task) return res.sendStatus(404)
+        return res.send(task)
+    } catch (e) {
+        res.status(400).send(e)
+    }
+})
+
+app.delete('/tasks/:id', async (req, res) => {
+    const _id = req.params.id
+
+    try {
+        const task = await Task.findByIdAndDelete(_id)
+        if (!task) return res.sendStatus(404)
+
         res.send(task)
     } catch (e) {
         res.sendStatus(400)
