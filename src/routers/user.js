@@ -50,6 +50,7 @@ router.post('/users/logoutAll', auth, async (req, res) => {
 })
 
 router.get('/users', auth, async (req, res) => {
+    if (!req.user.isAdmin) res.sendStatus(401)
     try {
         const users = await User.find({})
         res.send(users)
@@ -63,9 +64,9 @@ router.get('/users/me', auth, async (req, res) => {
 })
 
 
-router.get('/users/:id', async (req, res) => {
+router.get('/users/:id', auth, async (req, res) => {
+    if (!req.user.isAdmin) res.sendStatus(401)
     const _id = req.params.id
-
     try {
         const user = await User.findById(_id)
         if (!user) return res.sendStatus(404)
@@ -75,11 +76,12 @@ router.get('/users/:id', async (req, res) => {
     }
 })
 
-router.patch('/users/:id', async (req, res) => {
+router.patch('/users/:id', auth, async (req, res) => {
+    if (!req.user.isAdmin) res.sendStatus(401)
     const _id = req.params.id
 
     const updates = Object.keys(req.body)
-    const allowedUpdates = ['name', 'email', 'password', 'age']
+    const allowedUpdates = ['firstname', 'lastname', 'username', 'email', 'password', 'isAdmin']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
     if (!isValidOperation) return res.status(400).send({ error: 'Invalid updates!' })
@@ -97,7 +99,8 @@ router.patch('/users/:id', async (req, res) => {
     }
 })
 
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', auth, async (req, res) => {
+    if (!req.user.isAdmin) res.sendStatus(401)
     const _id = req.params.id
 
     try {
