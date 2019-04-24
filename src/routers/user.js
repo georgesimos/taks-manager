@@ -76,6 +76,22 @@ router.get('/users/:id', auth, async (req, res) => {
     }
 })
 
+router.patch('/users/me', auth, async (req, res) => {
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['firstname', 'lastname', 'username', 'email', 'password']
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+    if (!isValidOperation) return res.status(400).send({ error: 'Invalid updates!' })
+
+    try {
+        const { user } = req
+        updates.forEach((update) => user[update] = req.body[update])
+        await user.save()
+        res.send(user)
+    } catch (e) {
+        res.status(400).send(e)
+    }
+})
+
 router.patch('/users/:id', auth, async (req, res) => {
     if (!req.user.isAdmin) res.sendStatus(401)
     const _id = req.params.id
@@ -91,13 +107,23 @@ router.patch('/users/:id', auth, async (req, res) => {
         updates.forEach((update) => user[update] = req.body[update])
         await user.save()
 
-        // const user = await User.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
         if (!user) return res.sendStatus(404)
         res.send(user)
     } catch (e) {
         res.status(400).send(e)
     }
 })
+
+router.delete('/users/me', auth, async (req, res) => {
+    if (req.user.isAdmin) res.sendStatus(401)
+    try {
+        await req.user.remove()
+        res.send(req.user)
+    } catch (e) {
+        res.sendStatus(400)
+    }
+})
+
 
 router.delete('/users/:id', auth, async (req, res) => {
     if (!req.user.isAdmin) res.sendStatus(401)
